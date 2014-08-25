@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The strings in this file are not to be translated.
+-->
+<resources>
+
+    <!-- An identifier for the account type that this app provides -->
+    <string name="ACCOUNT_TYPE">com.lnikkila.oidcsample.account</string>
+
+</resources>

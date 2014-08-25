@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        applicationId "com.lnikkila.oidcsample"
+        minSdkVersion 15
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Google's OAuth library for OpenID Connect
+    // See https://code.google.com/p/google-oauth-java-client/wiki/Setup
+    compile('com.google.oauth-client:google-oauth-client:1.18.0-rc') {
+        exclude group: 'xpp3', module: 'xpp3'
+        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'com.google.android', module: 'android'
+    }
+
+    // Google's JSON parsing, could be replaced with Jackson
+    compile 'com.google.api-client:google-api-client-gson:1.19.0'
+
+    // For backwards compatibility, not necessarily needed
+    compile 'com.google.api-client:google-api-client-android:1.19.0'
+
+    // Easier HTTP requests, not necessarily needed
+    compile 'com.github.kevinsawicki:http-request:5.6'
+}

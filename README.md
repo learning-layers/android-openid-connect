@@ -26,8 +26,8 @@ Features
 Usage
 -----
 
-**You’ll need to register your app with an OIDC provider and put your configuration data to the
-[`Config.java`][3] file.**
+**You’ll need to register your app with an OIDC provider and put your configuration data into
+[`Config.java`][3].**
 
 When you launch the app, you’ll see this:
 

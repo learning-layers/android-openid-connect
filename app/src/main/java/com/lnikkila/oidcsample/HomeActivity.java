@@ -111,20 +111,11 @@ public class HomeActivity extends Activity {
         @Override
         protected Map doInBackground(Account... args) {
             Account account = args[0];
-            String idToken = null;
 
             try {
-                AccountManagerFuture<Bundle> futureManager = accountManager.getAuthToken(account,
-                        Authenticator.TOKEN_TYPE_ID, null, true, null, null);
-
-                idToken = futureManager.getResult().getString(AccountManager.KEY_AUTHTOKEN);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            try {
-                return APIUtility.getJson(getApplicationContext(), Config.userInfoUrl, idToken);
+                return APIUtility.getJson(getApplicationContext(), Config.userInfoUrl, account);
             } catch (IOException e) {
+                e.printStackTrace();
                 return null;
             }
         }

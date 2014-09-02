@@ -113,10 +113,10 @@ public class Authenticator extends AbstractAccountAuthenticator {
                 IdTokenResponse tokenResponse;
 
                 try {
-                    tokenResponse = OIDCUtils.refreshTokens(Config.authorizationServerUrl,
-                                                            Config.tokenServerUrl,
+                    tokenResponse = OIDCUtils.refreshTokens(Config.tokenServerUrl,
                                                             Config.clientId,
                                                             Config.clientSecret,
+                                                            Config.scopes,
                                                             refreshToken);
 
                     Log.d(TAG, "Got new tokens.");
@@ -135,7 +135,7 @@ public class Authenticator extends AbstractAccountAuthenticator {
             }
         }
 
-        Log.e(TAG, String.format("Returning token '%s' of type '%s'.", token, authTokenType));
+        Log.d(TAG, String.format("Returning token '%s' of type '%s'.", token, authTokenType));
 
         Bundle result = new Bundle();
 

@@ -106,14 +106,14 @@ public class HomeActivity extends Activity {
 
         /**
          * Makes the API request. We could use the OIDCUtils.getUserInfo() method, but we'll do it
-         * like this to illustrate making generic API requests.
+         * like this to illustrate making generic API requests after we've logged in.
          */
         @Override
         protected Map doInBackground(Account... args) {
             Account account = args[0];
 
             try {
-                return APIUtility.getJson(getApplicationContext(), Config.userInfoUrl, account);
+                return APIUtility.getJson(HomeActivity.this, Config.userInfoUrl, account);
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;

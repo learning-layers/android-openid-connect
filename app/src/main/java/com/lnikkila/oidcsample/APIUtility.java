@@ -54,7 +54,10 @@ public class APIUtility {
         AccountManager accountManager = AccountManager.get(context);
         String idToken;
 
-        // Try retrieving an ID token from the account manager
+        // Try retrieving an ID token from the account manager. The boolean true in the invocation
+        // tells Android to show a notification if the token can't be retrieved. When the
+        // notification is selected, it will launch the intent for re-authorisation. You could
+        // launch it automatically here if you wanted to by grabbing the intent from the bundle.
         try {
             AccountManagerFuture<Bundle> futureManager = accountManager.getAuthToken(account,
                     Authenticator.TOKEN_TYPE_ID, null, true, null, null);

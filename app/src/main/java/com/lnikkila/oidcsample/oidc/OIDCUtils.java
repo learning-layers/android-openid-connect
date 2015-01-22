@@ -27,7 +27,7 @@ import java.util.Map;
  * Access on Android.
  *
  * Currently this helper class is fairly limited. It's suitable for our use case and pretty much
- * nothing else.
+ * nothing else. Pull requests are appreciated!
  *
  * @author Leo Nikkilä
  */

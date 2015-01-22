@@ -1,8 +1,16 @@
 package com.lnikkila.oidcsample;
 
-public class Config {
+/**
+ * Simple utility class for storing OpenID Connect configuration. This should not be used in
+ * production. If you want to hide your keys, you should obfuscate them using ProGuard (with added
+ * manual obfuscation), DexGuard or something else.
+ *
+ * See this Stack Overflow post for some suggestions:
+ * https://stackoverflow.com/a/14570989
+ */
+public final class Config {
 
-    // TODO: Add the information you received from your OIDC provider here.
+    // TODO: Add the information you received from your OIDC provider below.
 
     public static final String clientId = "foobar";
     public static final String clientSecret = "xyzzy";

@@ -14,17 +14,15 @@ import com.lnikkila.oidcsample.oidc.authenticator.Authenticator;
 import java.io.IOException;
 import java.util.Map;
 
+import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
+
 /**
  * An incomplete class that illustrates how to make API requests with the ID Token.
  *
  * @author Leo Nikkilä
  */
 public class APIUtility {
-
-    private final String TAG = this.getClass().getSimpleName();
-
-    public static final int HTTP_UNAUTHORIZED = 401;
-    public static final int HTTP_FORBIDDEN = 403;
 
     /**
      * Makes a GET request and parses the received JSON string as a Map.
@@ -78,7 +76,9 @@ public class APIUtility {
 
             if (doRetry && (code == HTTP_UNAUTHORIZED || code == HTTP_FORBIDDEN)) {
                 // We're being denied access on the first try, let's renew the token and retry
-                accountManager.invalidateAuthToken(context.getString(R.string.ACCOUNT_TYPE), idToken);
+                String accountType = context.getString(R.string.ACCOUNT_TYPE);
+                accountManager.invalidateAuthToken(accountType, idToken);
+
                 return makeRequest(context, method, url, account, false);
             } else {
                 // An unrecoverable error or the renewed token didn't work either

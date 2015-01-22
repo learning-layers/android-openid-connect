@@ -40,7 +40,7 @@ import java.util.Set;
  */
 public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
-    private final String TAG = this.getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
 
     public static final String KEY_AUTH_URL = "com.lnikkila.oidcsample.KEY_AUTH_URL";
     public static final String KEY_IS_NEW_ACCOUNT = "com.lnikkila.oidcsample.KEY_IS_NEW_ACCOUNT";
@@ -132,7 +132,7 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         @Override
         protected Boolean doInBackground(String... args) {
             String authToken = args[0];
-            IdTokenResponse response = null;
+            IdTokenResponse response;
 
             Log.d(TAG, "Requesting ID token.");
 
@@ -248,4 +248,5 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
                 .create()
                 .show();
     }
+
 }

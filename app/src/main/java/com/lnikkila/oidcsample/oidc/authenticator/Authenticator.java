@@ -31,7 +31,7 @@ import java.io.IOException;
  */
 public class Authenticator extends AbstractAccountAuthenticator {
 
-    private final String TAG = this.getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
 
     private Context context;
     private AccountManager accountManager;

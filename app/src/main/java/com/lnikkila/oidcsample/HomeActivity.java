@@ -26,8 +26,6 @@ import java.util.Map;
  */
 public class HomeActivity extends Activity {
 
-    private final String TAG = this.getClass().getSimpleName();
-
     private Button loginButton;
     private ProgressBar progressBar;
 

@@ -12,7 +12,7 @@ import android.util.Log;
  */
 public class AuthenticatorService extends Service {
 
-    private final String TAG = this.getClass().getSimpleName();
+    private final String TAG = getClass().getSimpleName();
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -21,4 +21,5 @@ public class AuthenticatorService extends Service {
         Authenticator authenticator = new Authenticator(this);
         return authenticator.getIBinder();
     }
+
 }

@@ -233,6 +233,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
         accountManager.setAuthToken(account, Authenticator.TOKEN_TYPE_REFRESH, response.getRefreshToken());
     }
 
+    /**
+     * TODO: Improve error messages.
+     */
     private void showErrorDialog(String message) {
         new AlertDialog.Builder(AuthenticatorActivity.this)
                 .setTitle("Sorry, there was an error")

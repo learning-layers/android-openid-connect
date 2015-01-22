@@ -74,15 +74,16 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
         // Initialise the WebView
         WebView webView = (WebView) findViewById(R.id.WebView);
-        webView.getSettings().setJavaScriptEnabled(true);
+
+        // TODO: Enable this if your authorisation page requires JavaScript
+        // webView.getSettings().setJavaScriptEnabled(true);
+
         webView.loadUrl(authUrl);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String urlString, Bitmap favicon) {
                 super.onPageStarted(view, urlString, favicon);
-
-                Log.d(TAG, String.format("WebView loading URL '%s'.", urlString));
 
                 Uri url = Uri.parse(urlString);
                 Set<String> parameterNames = url.getQueryParameterNames();
@@ -95,8 +96,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
                     view.stopLoading();
 
                     String authToken = url.getQueryParameter("code");
-
-                    Log.d(TAG, String.format("Got Authorization Token '%s'.", authToken));
 
                     // Request the ID token
                     RequestIdTokenTask task = new RequestIdTokenTask();
@@ -149,8 +148,6 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
                 e.printStackTrace();
                 return false;
             }
-
-            Log.d(TAG, "Got response.");
 
             if (isNewAccount) {
                 createAccount(response);

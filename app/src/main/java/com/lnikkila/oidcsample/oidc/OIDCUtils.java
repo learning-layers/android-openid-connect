@@ -1,7 +1,5 @@
 package com.lnikkila.oidcsample.oidc;
 
-import android.util.Log;
-
 import com.github.kevinsawicki.http.HttpRequest;
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
@@ -32,8 +30,6 @@ import java.util.Map;
  * @author Leo Nikkilä
  */
 public class OIDCUtils {
-
-    private static final String TAG = "OIDCUtils";
 
     /**
      * Generates an URL to the Authorization Endpoint. The user can then authenticate themselves,
@@ -114,10 +110,6 @@ public class OIDCUtils {
         String idToken = response.getIdToken();
 
         if (isValidIdToken(clientId, idToken)) {
-            Log.d(TAG, String.format("Got ID Token '%s'.", idToken));
-            Log.d(TAG, String.format("Got Access Token '%s'.", response.getAccessToken()));
-            Log.d(TAG, String.format("Got Refresh Token '%s'.", response.getRefreshToken()));
-
             return response;
         } else {
             throw new IOException("Invalid ID token returned.");

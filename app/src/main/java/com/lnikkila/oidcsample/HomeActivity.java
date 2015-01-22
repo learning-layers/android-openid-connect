@@ -83,7 +83,7 @@ public class HomeActivity extends Activity {
 
                 new AlertDialog.Builder(this)
                         .setTitle("Choose an account")
-                        .setAdapter(new ArrayAdapter<String>(this,
+                        .setAdapter(new ArrayAdapter<>(this,
                                         android.R.layout.simple_list_item_1, name),
                                 new DialogInterface.OnClickListener() {
                                     @Override

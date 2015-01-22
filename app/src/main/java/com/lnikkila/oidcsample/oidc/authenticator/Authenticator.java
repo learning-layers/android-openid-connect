@@ -147,23 +147,6 @@ public class Authenticator extends AbstractAccountAuthenticator {
     }
 
     /**
-     * Returns an appropriate label for each token type.
-     * TODO: Not sure what this is for. Remove?
-     */
-    @Override
-    public String getAuthTokenLabel(String authTokenType) {
-        if (authTokenType.equals(TOKEN_TYPE_ACCESS)) {
-            return "Access Token";
-        } else if (authTokenType.equals(TOKEN_TYPE_ID)) {
-            return "ID Token";
-        } else if (authTokenType.equals(TOKEN_TYPE_REFRESH)) {
-            return "Refresh Token";
-        }
-
-        return null;
-    }
-
-    /**
      * Create an intent for showing the authorisation web page.
      */
     private Intent createIntentForAuthorization(AccountAuthenticatorResponse response) {
@@ -183,6 +166,11 @@ public class Authenticator extends AbstractAccountAuthenticator {
 
         intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
         return intent;
+    }
+
+    @Override
+    public String getAuthTokenLabel(String authTokenType) {
+        return null;
     }
 
     @Override

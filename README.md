@@ -6,6 +6,10 @@ OpenID Connect Sample for Android
 
 **An Android app that communicates with a non-Google OpenID Connect provider.**
 
+> **Please note:**  
+> I’m releasing a library soon with better support and ease of use.  
+> See [issue #2][8] for details and subscribe to it to get notified.
+
 Use [Google’s own APIs][1], if you want to connect to their OpenID provider servers. This
 project is meant to connect to non-Google providers, which those APIs don’t support.
 
@@ -79,3 +83,4 @@ Licensed under the MIT licence. See [LICENSING.md][7].
 [5]: https://github.com/learning-layers/AchSo
 [6]: https://github.com/lnikkila
 [7]: LICENSING.md
+[8]: https://github.com/learning-layers/android-openid-connect/issues/2

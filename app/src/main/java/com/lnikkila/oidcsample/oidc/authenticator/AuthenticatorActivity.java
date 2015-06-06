@@ -6,7 +6,6 @@ import android.accounts.AccountManager;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -80,55 +79,83 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
         webView.loadUrl(authUrl);
 
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageStarted(WebView view, String urlString, Bitmap favicon) {
-                super.onPageStarted(view, urlString, favicon);
+        webView.setWebViewClient(new AuthorizationWebViewClient());
+    }
 
-                Uri url = Uri.parse(urlString);
-                Set<String> parameterNames = url.getQueryParameterNames();
+    /**
+     * Handles the result embedded in the redirect URI.
+     *
+     * @param redirectUriString Received redirect URI with query parameters.
+     */
+    private void finishAuthorization(String redirectUriString) {
+        Uri redirectUri = Uri.parse(redirectUriString);
+        Set<String> parameterNames = redirectUri.getQueryParameterNames();
 
-                // The URL will contain a `code` parameter when the user has been authenticated
-                if (parameterNames.contains("code")) {
-                    // We won't need to keep loading anymore. This also prevents errors when using
-                    // redirect URLs that don't have real protocols (like app://) that are just
-                    // used for identification purposes in native apps.
-                    view.stopLoading();
+        // The URL will contain a `code` parameter when the user has been authenticated
+        if (parameterNames.contains("code")) {
+            String authToken = redirectUri.getQueryParameter("code");
 
-                    String authToken = url.getQueryParameter("code");
+            // Request the ID token
+            new RequestIdTokenTask().execute(authToken);
+            return;
+        }
 
-                    // Request the ID token
-                    RequestIdTokenTask task = new RequestIdTokenTask();
-                    task.execute(authToken);
+        if (parameterNames.contains("error")) {
+            // In case of an error, the `error` parameter contains an ASCII identifier, e.g.
+            // "temporarily_unavailable" and the `error_description` *may* contain a
+            // human-readable description of the error.
+            //
+            // For a list of the error identifiers, see
+            // http://tools.ietf.org/html/rfc6749#section-4.1.2.1
+            String error = redirectUri.getQueryParameter("error");
+            String errorDescription = redirectUri.getQueryParameter("error_description");
 
-                } else if (parameterNames.contains("error")) {
-                    view.stopLoading();
-
-                    // In case of an error, the `error` parameter contains an ASCII identifier, e.g.
-                    // "temporarily_unavailable" and the `error_description` *may* contain a
-                    // human-readable description of the error.
-                    //
-                    // For a list of the error identifiers, see
-                    // http://tools.ietf.org/html/rfc6749#section-4.1.2.1
-
-                    String error = url.getQueryParameter("error");
-                    String errorDescription = url.getQueryParameter("error_description");
-
-                    // If the user declines to authorise the app, there's no need to show an error
-                    // message.
-                    if ( ! error.equals("access_denied")) {
-                        showErrorDialog(String.format("Error code: %s\n\n%s", error,
-                                errorDescription));
-                    }
-                }
+            // If the user declines to authorise the app, there's no need to show an error message.
+            if (error.equals("access_denied")) {
+                return;
             }
-        });
+
+            showErrorDialog("Error code: %s\n\n%s", error, errorDescription);
+        }
+    }
+
+    /**
+     * Tries to handle the given URI as the redirect URI.
+     *
+     * @param uri URI to handle.
+     * @return Whether the URI was handled.
+     */
+    private boolean handleUri(String uri) {
+        if (uri.startsWith(Config.redirectUrl)) {
+            finishAuthorization(uri);
+            return true;
+        }
+
+        return false;
+    }
+
+    private class AuthorizationWebViewClient extends WebViewClient {
+
+        /**
+         * Forces the WebView to not load the URL if it can be handled.
+         */
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            return handleUri(url) || super.shouldOverrideUrlLoading(view, url);
+        }
+
+        @Override
+        public void onReceivedError(WebView view, int errorCode, String description, String url) {
+            showErrorDialog("Network error: got %s for %s.", description, url);
+        }
+
     }
 
     /**
      * Requests the ID Token asynchronously.
      */
     private class RequestIdTokenTask extends AsyncTask<String, Void, Boolean> {
+
         @Override
         protected Boolean doInBackground(String... args) {
             String authToken = args[0];
@@ -235,8 +262,15 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
     /**
      * TODO: Improve error messages.
+     *
+     * @param message Error message that can contain formatting placeholders.
+     * @param args    Formatting arguments for the message, or null.
      */
-    private void showErrorDialog(String message) {
+    private void showErrorDialog(String message, String... args) {
+        if (args != null) {
+            message = String.format(message, args);
+        }
+
         new AlertDialog.Builder(AuthenticatorActivity.this)
                 .setTitle("Sorry, there was an error")
                 .setMessage(message)

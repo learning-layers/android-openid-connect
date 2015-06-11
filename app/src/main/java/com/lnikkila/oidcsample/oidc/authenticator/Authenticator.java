@@ -11,11 +11,14 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.auth.openidconnect.IdTokenResponse;
 import com.lnikkila.oidcsample.Config;
 import com.lnikkila.oidcsample.oidc.OIDCUtils;
 
 import java.io.IOException;
+
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 
 /**
  * Used by Android's AccountManager to manage our account information.
@@ -124,10 +127,31 @@ public class Authenticator extends AbstractAccountAuthenticator {
                     accountManager.setAuthToken(account, TOKEN_TYPE_ID, tokenResponse.getIdToken());
                     accountManager.setAuthToken(account, TOKEN_TYPE_ACCESS, tokenResponse.getAccessToken());
                     accountManager.setAuthToken(account, TOKEN_TYPE_REFRESH, tokenResponse.getRefreshToken());
-                } catch (IOException e) {
+                }catch (TokenResponseException e) {
+                    if(e.getStatusCode() == HTTP_BAD_REQUEST && e.getContent().contains("invalid_grant")) {
+                        // If the refresh token has expired, we need to launch an intent for the user
+                        // to get us a new set of tokens by authorising us again.
+
+                        Log.d(TAG, "Refresh token expired, launching intent for renewing authorisation.");
+
+                        Bundle result = new Bundle();
+                        Intent intent = createIntentForAuthorization(response);
+
+                        // Provide the account that we need re-authorised
+                        intent.putExtra(AuthenticatorActivity.KEY_ACCOUNT_OBJECT, account);
+
+                        result.putParcelable(AccountManager.KEY_INTENT, intent);
+                        return result;
+                    }
+                    else {
+                        // There's not much we can do if we get here
+                        Log.e(TAG, "Couldn't get new tokens.", e);
+                    }
+                }
+                catch (IOException e) {
                     // There's not much we can do if we get here
-                    Log.e(TAG, "Couldn't get new tokens.");
-                    e.printStackTrace();
+                    Log.e(TAG, "Couldn't get new tokens.", e);
+
                 }
 
                 // Now, let's return the token that was requested

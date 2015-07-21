@@ -30,4 +30,16 @@ public final class Config {
     // app, try changing it to `offline`.
     public static final String[] scopes = {"openid", "profile", "offline_access"};
 
+    public enum Flows
+    {
+        AuthorizationCode,  //http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth
+        Implicit,           //http://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth
+        Hybrid              //http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
+    }
+
+    // The authorization flow type that determine the response_type authorization request should use.
+    // One of the supported flows AuthorizationCode, Implicit or Hybrid.
+    // For more info see http://openid.net/specs/openid-connect-core-1_0.html#Authentication
+    public static final Flows flowType = Flows.Hybrid;
+
 }

@@ -10,11 +10,13 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.google.api.client.auth.openidconnect.IdTokenResponse;
+import com.google.api.client.json.gson.GsonFactory;
 import com.lnikkila.oidcsample.Config;
 import com.lnikkila.oidcsample.oidc.OIDCUtils;
 import com.lnikkila.oidcsample.R;
@@ -37,6 +39,7 @@ import java.util.Set;
  * tokens.
  *
  * @author Leo Nikkilä
+ * @author Camilo Montes
  */
 public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
@@ -87,21 +90,9 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
                 Uri url = Uri.parse(urlString);
                 Set<String> parameterNames = url.getQueryParameterNames();
+                String extractedFragment = url.getEncodedFragment();
 
-                // The URL will contain a `code` parameter when the user has been authenticated
-                if (parameterNames.contains("code")) {
-                    // We won't need to keep loading anymore. This also prevents errors when using
-                    // redirect URLs that don't have real protocols (like app://) that are just
-                    // used for identification purposes in native apps.
-                    view.stopLoading();
-
-                    String authToken = url.getQueryParameter("code");
-
-                    // Request the ID token
-                    RequestIdTokenTask task = new RequestIdTokenTask();
-                    task.execute(authToken);
-
-                } else if (parameterNames.contains("error")) {
+                if (parameterNames.contains("error")) {
                     view.stopLoading();
 
                     // In case of an error, the `error` parameter contains an ASCII identifier, e.g.
@@ -116,13 +107,180 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
 
                     // If the user declines to authorise the app, there's no need to show an error
                     // message.
-                    if ( ! error.equals("access_denied")) {
+                    if (!error.equals("access_denied")) {
                         showErrorDialog(String.format("Error code: %s\n\n%s", error,
                                 errorDescription));
                     }
+                } else if(urlString.startsWith(Config.redirectUrl)){
+                    // We won't need to keep loading anymore. This also prevents errors when using
+                    // redirect URLs that don't have real protocols (like app://) that are just
+                    // used for identification purposes in native apps.
+                    view.stopLoading();
+
+                    switch (Config.flowType) {
+                        case Implicit: {
+                            if (!TextUtils.isEmpty(extractedFragment)) {
+                                CreateIdTokenFromFragmentPartTask task = new CreateIdTokenFromFragmentPartTask();
+                                task.execute(extractedFragment);
+
+                            } else {
+                                Log.e(TAG, String.format(
+                                        "urlString '%1$s' doesn't contain fragment part; can't extract tokens",
+                                        urlString));
+                            }
+                            break;
+                        }
+                        case Hybrid: {
+                            if (!TextUtils.isEmpty(extractedFragment)) {
+                                RequestIdTokenFromFragmentPartTask task = new RequestIdTokenFromFragmentPartTask();
+                                task.execute(extractedFragment);
+
+                            } else {
+                                Log.e(TAG, String.format(
+                                        "urlString '%1$s' doesn't contain fragment part; can't request tokens",
+                                        urlString));
+                            }
+                            break;
+                        }
+                        case AuthorizationCode:
+                        default: {
+                            // The URL will contain a `code` parameter when the user has been authenticated
+                            if (parameterNames.contains("code")) {
+                                String authToken = url.getQueryParameter("code");
+
+                                // Request the ID token
+                                RequestIdTokenTask task = new RequestIdTokenTask();
+                                task.execute(authToken);
+                            }
+                            else {
+                                Log.e(TAG, String.format(
+                                        "urlString '%1$s' doesn't contain code param; can't extract authCode",
+                                        urlString));
+                            }
+                            break;
+                        }
+                    }
                 }
+                // else : should be an intermediate url, load it and keep going
             }
         });
+    }
+
+    private class CreateIdTokenFromFragmentPartTask extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... args) {
+            String fragmentPart = args[0];
+
+            Uri tokenExtrationUrl = new Uri.Builder().encodedQuery(fragmentPart).build();
+            String accessToken = tokenExtrationUrl.getQueryParameter("access_token");
+            String idToken = tokenExtrationUrl.getQueryParameter("id_token");
+            String tokenType = tokenExtrationUrl.getQueryParameter("token_type");
+            String expiresInString = tokenExtrationUrl.getQueryParameter("expires_in");
+            Long expiresIn = (!TextUtils.isEmpty(expiresInString)) ? Long.decode(expiresInString) : null;
+
+            String scope = tokenExtrationUrl.getQueryParameter("scope");
+
+            if (TextUtils.isEmpty(accessToken) || TextUtils.isEmpty(idToken) || TextUtils.isEmpty(tokenType) || expiresIn == null) {
+                return false;
+            }
+            else {
+                Log.i(TAG, "AuthToken : " + accessToken);
+
+                IdTokenResponse response = new IdTokenResponse();
+                response.setAccessToken(accessToken);
+                response.setIdToken(idToken);
+                response.setTokenType(tokenType);
+                response.setExpiresInSeconds(expiresIn);
+                response.setScope(scope);
+                response.setFactory(new GsonFactory());
+
+                if (isNewAccount) {
+                    createAccount(response);
+                } else {
+                    setTokens(response);
+                }
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean wasSuccess) {
+            if (wasSuccess) {
+                // The account manager still wants the following information back
+                Intent intent = new Intent();
+
+                intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
+                intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+
+                setAccountAuthenticatorResult(intent.getExtras());
+                setResult(RESULT_OK, intent);
+                finish();
+            } else {
+                showErrorDialog("Could not get ID Token.");
+            }
+        }
+    }
+
+    /**
+     * Hybrid flow
+     */
+    private class RequestIdTokenFromFragmentPartTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... args) {
+            String fragmentPart = args[0];
+
+            Uri tokenExtrationUrl = new Uri.Builder().encodedQuery(fragmentPart).build();
+            String idToken = tokenExtrationUrl.getQueryParameter("id_token");
+            String authCode = tokenExtrationUrl.getQueryParameter("code");
+
+            if (TextUtils.isEmpty(idToken) || TextUtils.isEmpty(authCode)) {
+                return false;
+            }
+            else {
+                IdTokenResponse response;
+
+                Log.i(TAG, "Requesting access_token with AuthCode : " + authCode);
+
+                try {
+                    response = OIDCUtils.requestTokens(Config.tokenServerUrl,
+                            Config.redirectUrl,
+                            Config.clientId,
+                            Config.clientSecret,
+                            authCode);
+                } catch (IOException e) {
+                    Log.e(TAG, "Could not get response.");
+                    e.printStackTrace();
+                    return false;
+                }
+
+                if (isNewAccount) {
+                    createAccount(response);
+                } else {
+                    setTokens(response);
+                }
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean wasSuccess) {
+            if (wasSuccess) {
+                // The account manager still wants the following information back
+                Intent intent = new Intent();
+
+                intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, account.name);
+                intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+
+                setAccountAuthenticatorResult(intent.getExtras());
+                setResult(RESULT_OK, intent);
+                finish();
+            } else {
+                showErrorDialog("Could not get ID Token.");
+            }
+        }
     }
 
     /**
@@ -137,12 +295,11 @@ public class AuthenticatorActivity extends AccountAuthenticatorActivity {
             Log.d(TAG, "Requesting ID token.");
 
             try {
-                response = OIDCUtils.requestTokens(Config.authorizationServerUrl,
-                                                   Config.tokenServerUrl,
-                                                   Config.redirectUrl,
-                                                   Config.clientId,
-                                                   Config.clientSecret,
-                                                   authToken);
+                response = OIDCUtils.requestTokens(Config.tokenServerUrl,
+                        Config.redirectUrl,
+                        Config.clientId,
+                        Config.clientSecret,
+                        authToken);
             } catch (IOException e) {
                 Log.e(TAG, "Could not get response.");
                 e.printStackTrace();

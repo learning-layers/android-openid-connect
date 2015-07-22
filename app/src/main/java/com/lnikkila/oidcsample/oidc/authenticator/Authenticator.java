@@ -177,12 +177,27 @@ public class Authenticator extends AbstractAccountAuthenticator {
         Intent intent = new Intent(context, AuthenticatorActivity.class);
 
         // Generate a new authorisation URL
-        String authUrl = OIDCUtils.newAuthorizationUrl(Config.authorizationServerUrl,
-                                                       Config.tokenServerUrl,
-                                                       Config.redirectUrl,
-                                                       Config.clientId,
-                                                       Config.clientSecret,
-                                                       Config.scopes);
+        String authUrl;
+
+        switch (Config.flowType) {
+            case AuthorizationCode :
+                authUrl = OIDCUtils.codeFlowAuthenticationUrl(Config.authorizationServerUrl,
+                        Config.clientId, Config.redirectUrl, Config.scopes);
+                break;
+            case Implicit:
+                authUrl = OIDCUtils.implicitFlowAuthenticationUrl(Config.authorizationServerUrl,
+                        Config.clientId, Config.redirectUrl, Config.scopes);
+                break;
+            case Hybrid:
+                authUrl = OIDCUtils.hybridFlowAuthenticationUrl(Config.authorizationServerUrl,
+                        Config.clientId, Config.redirectUrl, Config.scopes);
+                break;
+            default:
+                Log.d(TAG, "Requesting unsupported flowType! Using CodeFlow instead");
+                authUrl = OIDCUtils.codeFlowAuthenticationUrl(Config.authorizationServerUrl,
+                        Config.clientId, Config.redirectUrl, Config.scopes);
+                break;
+        }
 
         Log.d(TAG, String.format("Created new intent with authorisation URL '%s'.", authUrl));
 

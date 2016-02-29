@@ -4,11 +4,11 @@ OpenID Connect Sample for Android
 
 ![The app icon with the OpenID logo.](app/src/main/res/drawable-xxhdpi/ic_launcher.png)
 
-**An Android app that communicates with a non-Google OpenID Connect provider.**
+**~~An Android app that communicates with a non-Google OpenID Connect provider.~~**
 
 > **Please note:**  
-> I’m releasing a library soon with better support and ease of use.  
-> See [issue #2][8] for details and subscribe to it to get notified.
+> This is currently unmaintained, check out
+> [kalemontes/OIDCAndroidLib](https://github.com/kalemontes/OIDCAndroidLib) instead.
 
 Use [Google’s own APIs][1], if you want to connect to their OpenID provider servers. This
 project is meant to connect to non-Google providers, which those APIs don’t support.
